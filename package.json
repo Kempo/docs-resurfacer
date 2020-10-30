@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "serverless-plugin-typescript": "^1.1.9",
+    "typescript": "^4.0.5"
+  },
+  "dependencies": {
+    "googleapis": "39",
+    "serverless-offline": "^6.8.0"
+  }
+}
