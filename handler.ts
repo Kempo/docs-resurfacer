@@ -1,11 +1,31 @@
-import { onLoad } from './helpers';
+import { onLoad, processToken } from './helpers';
 
-export async function version(event) {
+export async function authorize(event) {
+
+  const res = await onLoad();
+
   return {
     statusCode: 200,
     body: JSON.stringify(
       {
-        version: 1.0
+        message: `${res}`
+      }
+    ),
+  };
+}
+
+export async function process(event) {
+
+  const code = event.queryStringParameters.code;
+  console.log(`Provided code: ${code}`);
+
+  await processToken((oauth) => { console.log('callback successful.'); }, code);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(
+      {
+        message: `Oh yeah.`
       }
     ),
   };

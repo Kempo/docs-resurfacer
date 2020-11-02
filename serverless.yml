@@ -23,6 +23,22 @@ frameworkVersion: '2'
 provider:
   name: aws
   runtime: nodejs12.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+
+custom:
+  bucket: docs-resurfacer-access-tokens
+
+resources:
+  Resources:
+    NewResource:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: "${self:custom.bucket}"
 
 plugins:
   - serverless-plugin-typescript
@@ -63,16 +79,24 @@ plugins:
 
 functions:
   version:
-    handler: handler.version
+    handler: handler.authorize
     events:
       - http:
-          path: /version
+          path: /authorize
+          method: GET
+  process:
+    handler: handler.process
+    events:
+      - http:
+          path: /process
           method: GET
   aggregate:
     handler: handler.scheduled
     events:
       - schedule:
           rate: rate(5 minutes)
+          enabled: false
+
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

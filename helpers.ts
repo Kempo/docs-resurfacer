@@ -1,7 +1,8 @@
 import { google } from 'googleapis';
+import { S3 } from 'aws-sdk';
+import credentials from './credentials.json';
 
-const fs = require('fs');
-const readline = require('readline');
+const bucket = new S3();
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/documents.readonly'];
@@ -13,13 +14,10 @@ const SCOPES = ['https://www.googleapis.com/auth/documents.readonly'];
 // save newly generated token file in S3
 // const TOKEN_PATH = 'token.json';
 
-export function onLoad(callback) {
+export async function onLoad() {
   // Load client secrets from a local file.
-  fs.readFile('credentials.json', (err, content) => {
-    if (err) return console.log('Error loading client secret file:', err);
-    // Authorize a client with credentials, then call the Google Docs API.
-    authorize(JSON.parse(content), callback);
-  });
+  // Authorize a client with credentials, then call the Google Docs API.
+  return authorize(credentials);
 }
 
 /**
@@ -28,49 +26,70 @@ export function onLoad(callback) {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials, callback) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
+function authorize(credentials) {
+  const {client_secret, client_id, redirect_uris} = credentials.web;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
   // Check if there is already existing refresh/access tokens
   // Check from S3
-  fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getNewToken(oAuth2Client, callback);
-    oAuth2Client.setCredentials(JSON.parse(token));
-    callback(oAuth2Client);
+
+  bucket.getObject({
+    Bucket: 'docs-resurfacer-access-tokens',
+    Key: 'aaron-chen.json'
+  }).promise().then((data) => {
+    console.log('retrieved');
+    console.log(data);
+
+    // set OAuth
+
+  }).catch(err => {
+    console.log('No file detected.');
+    const res = getNewToken(oAuth2Client);
+    console.log(res);
   });
+
+  return 'Finished.';
 }
 
 /**
  * Get and store new token after prompting for user authorization, and then
  * execute the given callback with the authorized OAuth2 client.
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
  */
-function getNewToken(oAuth2Client, callback) {
+function getNewToken(oAuth2Client) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
   });
-  console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  rl.question('Enter the code from that page here: ', (code) => {
-    rl.close();
-    oAuth2Client.getToken(code, (err, token) => {
-      if (err) return console.error('Error retrieving access token', err);
-      oAuth2Client.setCredentials(token);
 
-      // store in S3 not ...
-      // Store the token to disk for later program executions
-      fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-        if (err) console.error(err);
-        console.log('Token stored to', TOKEN_PATH);
-      });
-      callback(oAuth2Client);
-    });
+  // return authUrl to client
+  // client sends back request with code
+  return `Please visit ${authUrl}`;
+}
+
+export async function processToken(callback, code) {
+  console.log(credentials);
+
+  const {client_secret, client_id, redirect_uris} = credentials.web;
+  const oAuth2Client = new google.auth.OAuth2(
+      client_id, client_secret, redirect_uris[0]);
+
+  return oAuth2Client.getToken(code, (err, token) => {
+    if (err) { return err };
+    oAuth2Client.setCredentials(token);
+
+    bucket.upload({
+      Bucket: 'docs-resurfacer-access-tokens',
+      Key: 'aaron-chen.json',
+      Body: JSON.stringify(token)
+    }).promise().then(res => {
+      console.log('success uploaded.');
+      console.log(res);
+    }).catch(err => {
+      console.log(err);
+    })
+
+    callback(oAuth2Client);
   });
 }
