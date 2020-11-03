@@ -94,8 +94,8 @@ functions:
     handler: handler.scheduled
     events:
       - schedule:
-          rate: rate(5 minutes)
-          enabled: false
+          rate: rate(1 minute)
+          enabled: true
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events

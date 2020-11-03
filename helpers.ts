@@ -5,7 +5,9 @@ import credentials from './credentials.json';
 const bucket = new S3();
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/documents.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/documents.readonly', 
+                'https://www.googleapis.com/auth/userinfo.email',
+                'https://www.googleapis.com/auth/drive.readonly'];
 
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
@@ -14,10 +16,10 @@ const SCOPES = ['https://www.googleapis.com/auth/documents.readonly'];
 // save newly generated token file in S3
 // const TOKEN_PATH = 'token.json';
 
-export async function onLoad() {
+export async function onLoad(callback) {
   // Load client secrets from a local file.
   // Authorize a client with credentials, then call the Google Docs API.
-  return authorize(credentials);
+  return authorize(credentials, callback);
 }
 
 /**
@@ -26,25 +28,39 @@ export async function onLoad() {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-function authorize(credentials) {
+async function authorize(credentials, callback) {
   const {client_secret, client_id, redirect_uris} = credentials.web;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
+  /*
+  await bucket.listObjectsV2({
+    Bucket: 'docs-resurfacer-access-tokens',
+  }).promise().then((res) => {
+    console.log('List:')
+    console.log(res);
+  });
+  */    
+
   // Check if there is already existing refresh/access tokens
   // Check from S3
-
-  bucket.getObject({
+  await bucket.getObject({
     Bucket: 'docs-resurfacer-access-tokens',
     Key: 'aaron-chen.json'
   }).promise().then((data) => {
-    console.log('retrieved');
-    console.log(data);
+    console.log(data.Body);
+    console.log('Tokens successfully retrieved.');
+    const pulledCredentials = JSON.parse(data.Body.toString());
+    console.log(pulledCredentials);
 
-    // set OAuth
+    // convert file to readable
+    // set OAuth with file
+    oAuth2Client.setCredentials(pulledCredentials);
+    callback(oAuth2Client);
 
   }).catch(err => {
-    console.log('No file detected.');
+    console.log('Getting new token...');
+    console.log(err);
     const res = getNewToken(oAuth2Client);
     console.log(res);
   });
@@ -68,28 +84,24 @@ function getNewToken(oAuth2Client) {
   return `Please visit ${authUrl}`;
 }
 
-export async function processToken(callback, code) {
-  console.log(credentials);
-
+export async function processToken(code) {
   const {client_secret, client_id, redirect_uris} = credentials.web;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
-  return oAuth2Client.getToken(code, (err, token) => {
+  return oAuth2Client.getToken(code, async (err, token) => {
     if (err) { return err };
     oAuth2Client.setCredentials(token);
 
-    bucket.upload({
+    return await bucket.upload({
       Bucket: 'docs-resurfacer-access-tokens',
       Key: 'aaron-chen.json',
       Body: JSON.stringify(token)
     }).promise().then(res => {
-      console.log('success uploaded.');
-      console.log(res);
+      console.log('we got dat done.');
+      return 'Successfully uploaded.'
     }).catch(err => {
       console.log(err);
     })
-
-    callback(oAuth2Client);
   });
 }

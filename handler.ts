@@ -1,8 +1,10 @@
 import { onLoad, processToken } from './helpers';
+import { google } from 'googleapis';
 
+// Returns authorization url.
 export async function authorize(event) {
 
-  const res = await onLoad();
+  const res = await onLoad(() => { console.log('Authorization url posted.') });
 
   return {
     statusCode: 200,
@@ -14,18 +16,19 @@ export async function authorize(event) {
   };
 }
 
+// Processes api credentials and saves them.
 export async function process(event) {
 
   const code = event.queryStringParameters.code;
   console.log(`Provided code: ${code}`);
 
-  await processToken((oauth) => { console.log('callback successful.'); }, code);
+  const res = await processToken(code);
 
   return {
     statusCode: 200,
     body: JSON.stringify(
       {
-        message: `Oh yeah.`
+        message: `${res}`
       }
     ),
   };
@@ -62,9 +65,32 @@ export async function remove(event) {
 }
 
 export async function scheduled(event) {
-
   // send out both docs and also a reauthorization link
+  // call `authorize`
+
+  const res = await onLoad(fetchDocuments);
 
   const time = new Date();
   console.log(`Logging data at ${time}`);
+}
+
+// application/vnd.google-apps.document	
+
+async function fetchDocuments(auth) {
+  console.log('call back!');
+  
+  const drive = google.drive({ version: 'v3', auth });
+
+  // loop through until `pageToken` is null
+
+  var pageToken = null;
+
+  const documents = await drive.files.list({
+    q: `mimeType='application/vnd.google-apps.document'`,
+    fields: 'nextPageToken, files(id, name)',
+    spaces: 'drive',
+    pageToken: pageToken
+  })
+
+  console.log(documents.data.files);
 }
