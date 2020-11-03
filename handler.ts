@@ -74,8 +74,6 @@ export async function scheduled(event) {
   console.log(`Logging data at ${time}`);
 }
 
-// application/vnd.google-apps.document	
-
 async function fetchDocuments(auth) {
   console.log('call back!');
   
@@ -86,11 +84,12 @@ async function fetchDocuments(auth) {
   var pageToken = null;
 
   const documents = await drive.files.list({
-    q: `mimeType='application/vnd.google-apps.document'`,
+    q: `trashed = false and mimeType = 'application/vnd.google-apps.document' and modifiedTime >= '2020-08-21T00:00:00-00:00' and 'ilestkempo@gmail.com' in owners`,
     fields: 'nextPageToken, files(id, name)',
     spaces: 'drive',
     pageToken: pageToken
   })
 
   console.log(documents.data.files);
+  console.log('Next: ' + documents.data.nextPageToken);
 }
