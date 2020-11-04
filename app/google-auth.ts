@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import { S3 } from 'aws-sdk';
-import credentials from './credentials.json';
+import credentials from '../credentials.json';
 
 const bucket = new S3();
 
@@ -48,7 +48,6 @@ async function authorize(credentials, callback) {
     Bucket: 'docs-resurfacer-access-tokens',
     Key: 'aaron-chen.json'
   }).promise().then((data) => {
-    console.log(data.Body);
     console.log('Tokens successfully retrieved.');
     const pulledCredentials = JSON.parse(data.Body.toString());
     console.log(pulledCredentials);
@@ -57,8 +56,9 @@ async function authorize(credentials, callback) {
     // set OAuth with file
     oAuth2Client.setCredentials(pulledCredentials);
     callback(oAuth2Client);
-
   }).catch(err => {
+    // if the file has deprecated credentials or if it doesn't exist
+
     console.log('Getting new token...');
     console.log(err);
     const res = getNewToken(oAuth2Client);

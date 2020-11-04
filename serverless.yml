@@ -79,19 +79,19 @@ plugins:
 
 functions:
   version:
-    handler: handler.authorize
+    handler: app/handler.authorize
     events:
       - http:
           path: /authorize
           method: GET
   process:
-    handler: handler.process
+    handler: app/handler.process
     events:
       - http:
           path: /process
           method: GET
   aggregate:
-    handler: handler.scheduled
+    handler: app/handler.scheduled
     events:
       - schedule:
           rate: rate(1 minute)
