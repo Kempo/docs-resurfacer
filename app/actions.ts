@@ -8,6 +8,7 @@ export async function fetchDocuments(auth) {
   const drive = google.drive({ version: 'v3', auth });
 
   // TODO: document caching -> cron cache clearer (1 week) + check cache -> then fetch
+  // or key-based cache expiration ? See Lutke or DHH blog post
 
   let pageToken = null;
   let documentsList = [];
