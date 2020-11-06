@@ -2,7 +2,7 @@ import Mustache from 'mustache';
 import { google } from 'googleapis';
 import { SES } from 'aws-sdk';
 
-const ses = new SES();
+const ses = new SES({ region: 'us-east-1' });
 
 export async function fetchDocuments(auth) {  
   const drive = google.drive({ version: 'v3', auth });
@@ -25,25 +25,39 @@ export async function fetchDocuments(auth) {
       throw new Error(err);
     });
 
-    console.log(gResponse);
+    // console.log(gResponse);
 
     pageToken = gResponse.nextPageToken;
-    console.log('new token: ' + pageToken);
+    // console.log('new token: ' + pageToken);
     documentsList = documentsList.concat(gResponse.files);
   } while (pageToken != null);
 
   console.log(`Pulled documents: ${documentsList.length}`);
+
+  await sendNewsletter(partitionList(documentsList)).then(res => {
+    console.log('sent!');
+    console.log(res);
+  }).catch(err => {
+    console.log(err);
+  });
 }
 
-function sendNewsletter(curatedList) {
+function partitionList(list) {
+  // gets the first five for now
+  return list.slice(0, 5);
+}
+
+function sendNewsletter(curatedList: any[]) {
+  console.log(curatedList);
+
   const template = `
     <h1>Documents</h1>
     <div>
       <ul>
         {{#docs}}
           <li>
-            <h3>{{ title }}</h3>
-            <p><a href="{{date}}">Link</a></p>
+            <h3>{{ name }}</h3>
+            <p><a href="{{ webViewLink }}">Link</a></p>
           </li>
         {{/docs}}
       </ul>
@@ -57,6 +71,7 @@ function sendNewsletter(curatedList) {
   };
 
   const html = Mustache.render(template, view);
+  console.log(html);
 
   const params = {
     Destination: {
@@ -64,11 +79,13 @@ function sendNewsletter(curatedList) {
     },
     Message: {
         Body: {
-            Html: { Data: "..." },
-            Text: { Data: "Test" }
+            Html: { Data: html },
+            Text: { Data: "Documents List" }
         },
-        Subject: { Data: "Aaron Chen" }
+        Subject: { Data: "Documents by Aaron Chen" }
     },
     Source: "ilestkempo@gmail.com"
   };
+
+  return ses.sendEmail(params).promise();
 }
