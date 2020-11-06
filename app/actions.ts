@@ -1,3 +1,4 @@
+import Mustache from 'mustache';
 import { google } from 'googleapis';
 import { SES } from 'aws-sdk';
 
@@ -15,7 +16,7 @@ export async function fetchDocuments(auth) {
   do {
     const gResponse = await drive.files.list({
       q: `trashed = false and mimeType = 'application/vnd.google-apps.document' and createdTime >= '2020-08-21T00:00:00-00:00' and 'ilestkempo@gmail.com' in owners`,
-      fields: 'nextPageToken, files(id, name)',
+      fields: 'nextPageToken, files(id, name, webViewLink)',
       spaces: 'drive',
       pageToken: pageToken
     }).then(r => r.data).catch(err => {
@@ -33,8 +34,28 @@ export async function fetchDocuments(auth) {
   console.log(`Pulled documents: ${documentsList.length}`);
 }
 
-function sendNewsletter() {
-  // aws ses
+function sendNewsletter(curatedList) {
+  const template = `
+    <h1>Documents</h1>
+    <div>
+      <ul>
+        {{#docs}}
+          <li>
+            <h3>{{ title }}</h3>
+            <p><a href="{{date}}">Link</a></p>
+          </li>
+        {{/docs}}
+      </ul>
+    </div>
+    <p style="color:#CCC">{{ date }}</p>
+  `;
+
+  const view = {
+    docs: curatedList,
+    date: 'The date'
+  };
+
+  const html = Mustache.render(template, view);
 
   const params = {
     Destination: {
@@ -42,11 +63,11 @@ function sendNewsletter() {
     },
     Message: {
         Body: {
+            Html: { Data: "..." },
             Text: { Data: "Test" }
-            
         },
-        Subject: { Data: "Test Email" }
+        Subject: { Data: "Aaron Chen" }
     },
     Source: "ilestkempo@gmail.com"
-};
+  };
 }
