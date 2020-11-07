@@ -8,7 +8,17 @@ const RANDOMIZED_COUNT = 3;
 
 const ses = new SES({ region: 'us-east-1' });
 
-export async function fetchDocuments(auth) {  
+export async function startScheduledEmail(auth) {
+  return await fetchDocuments(auth)
+                .then(fetchTemplate)
+                .then(sendNewsletter)
+                .then((res) => {
+                  console.log(`Email sent at ${Date.now()}`);
+                  return res;
+                })
+}
+
+async function fetchDocuments(auth) {  
   const drive = google.drive({ version: 'v3', auth });
 
   // TODO: document caching -> cron cache clearer (1 week) + check cache -> then fetch
@@ -34,13 +44,23 @@ export async function fetchDocuments(auth) {
   } while (pageToken != null);
 
   console.log(`Pulled documents: ${documentsList.length}`);
-  const partitions = partitionList(documentsList);
+  const documentPartitions = partitionList(documentsList);
 
-  await sendNewsletter(partitions).then(res => {
+  return documentPartitions;
+
+  /*
+  const template = fetchTemplate(documentPartitions);
+
+  return template;
+  */
+
+  /*
+  await sendNewsletter(template).then(res => {
     console.log('Email sent!');
   }).catch(err => {
     console.log(err);
   });
+  */
 }
 
 // fetches some most recent docs along with randomized historical ones
@@ -67,26 +87,31 @@ function partitionList(list: any[]) {
     generated.push(tail[i])
   });
 
-  // combines most recent with randomly generated
-  // return head.concat(generated);
   return {
     latest: head,
     randomized: generated
   }
 }
 
-function sendNewsletter({ latest, randomized }) {
+function fetchTemplate({ latest, randomized }) {
   const template = fs.readFileSync('app/resources/template.html').toString();
+  const styles = fs.readFileSync('app/resources/style.css').toString();
 
   const view = {
+    styles: `<style>${styles}</style>`,
     latest,
     randomized,
     date: new Date().toLocaleDateString(),
   };
 
   const html = Mustache.render(template, view);
+
   console.log(html);
 
+  return html;
+}
+
+function sendNewsletter(html: string) {
   const params = {
     Destination: {
         ToAddresses: ["ilestkempo@gmail.com"]

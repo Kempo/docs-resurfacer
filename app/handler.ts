@@ -1,5 +1,5 @@
 import { onLoad, processToken } from './google-auth';
-import { fetchDocuments } from './actions';
+import { startScheduledEmail } from './actions';
 
 // Returns authorization url.
 export async function authorize(event) {
@@ -38,8 +38,5 @@ export async function scheduled(event) {
   // send out both docs and also a reauthorization link
   // call `authorize`
 
-  const res = await onLoad(fetchDocuments);
-
-  const time = new Date();
-  console.log(`Logging data at ${time}`);
+  await onLoad(startScheduledEmail);
 }

@@ -1,29 +1,64 @@
 <html lang="en">
   <head>
-    <link rel="stylesheet" href="style.css" />
+    {{{ styles }}}
   </head>
   <body>
-    <h1>Documents</h1>
-    <div>
-      <h2>Latest</h2>
-      <ul>
-        {{#latest}}
-          <li>
-            <h3>{{ name }}</h3>
-            <p><a href="{{ webViewLink }}">Link</a></p>
-          </li>
-        {{/latest}}
-      </ul>
-      <h2>Selected</h2>
-      <ul>
-        {{#randomized}}
-          <li>
-            <h3>{{ name }}</h3>
-            <p><a href="{{ webViewLink }}">Link</a></p>
-          </li>
-        {{/randomized}}
-      </ul>
-    </div>
-    <p style="color:#CCC">Generated {{ date }}</p>
+    <table border="0" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse">
+      <tbody>
+        <tr>
+          <td width="100%" align="center">
+            <table border="0" cellspacing="0" cellpadding="0" align="center" style="border-collapse:collapse">
+              <tbody>
+                <tr>
+                  <td width="840" align="center">
+                    <div style="max-width:600px;width:100%;margin:0 auto" dir="ltr" bgcolor="#ffffff">
+                      <table border="0" cellspacing="0" cellpadding="0" align="center" id="m_5267358241486950664email_table" style="border-collapse:collapse;max-width:420px;margin:0 auto">
+                        <tbody>
+                          <tr><td height="20" style="line-height:20px" colspan="3">&nbsp;</td></tr>
+                          <tr>
+                            <td>
+                              <h1>Documents</h1>
+                              <p style="color:#CCC">Generated: <strong>{{ date }}</strong></p>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <h2>Latest</h2>
+                              <hr />
+                              <ul>
+                                {{#latest}}
+                                  <li>
+                                    <h3>{{ name }}</h3>
+                                    <p><a href="{{ webViewLink }}">Link</a></p>
+                                  </li>
+                                {{/latest}}
+                              </ul>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <h2>Selected</h2>
+                              <hr />
+                              <ul>
+                                {{#randomized}}
+                                  <li>
+                                    <h3>{{ name }}</h3>
+                                    <p><a href="{{ webViewLink }}">Link</a></p>
+                                  </li>
+                                {{/randomized}}
+                              </ul>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </body>
 </html>
