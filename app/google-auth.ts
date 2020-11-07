@@ -4,17 +4,9 @@ import credentials from '../credentials.json';
 
 const bucket = new S3();
 
-// If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/documents.readonly', 
                 'https://www.googleapis.com/auth/userinfo.email',
                 'https://www.googleapis.com/auth/drive.readonly'];
-
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
-
-// save newly generated token file in S3
-// const TOKEN_PATH = 'token.json';
 
 export async function onLoad(callback) {
   // Load client secrets from a local file.
@@ -32,15 +24,6 @@ async function authorize(credentials, callback) {
   const {client_secret, client_id, redirect_uris} = credentials.web;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
-
-  /*
-  await bucket.listObjectsV2({
-    Bucket: 'docs-resurfacer-access-tokens',
-  }).promise().then((res) => {
-    console.log('List:')
-    console.log(res);
-  });
-  */    
 
   // Check if there is already existing refresh/access tokens
   // Check from S3

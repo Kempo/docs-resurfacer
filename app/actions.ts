@@ -47,20 +47,6 @@ async function fetchDocuments(auth) {
   const documentPartitions = partitionList(documentsList);
 
   return documentPartitions;
-
-  /*
-  const template = fetchTemplate(documentPartitions);
-
-  return template;
-  */
-
-  /*
-  await sendNewsletter(template).then(res => {
-    console.log('Email sent!');
-  }).catch(err => {
-    console.log(err);
-  });
-  */
 }
 
 // fetches some most recent docs along with randomized historical ones
