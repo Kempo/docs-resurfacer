@@ -29,6 +29,8 @@ provider:
         - s3:PutObject
         - s3:PutObjectAcl
       Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+  apiGateway:
+    shouldStartNameWithService: true
 
 custom:
   bucket: docs-resurfacer-access-tokens
@@ -76,6 +78,10 @@ plugins:
 #  exclude:
 #    - exclude-me.js
 #    - exclude-me-dir/**
+
+package:
+  include:
+    - app/resources/**
 
 functions:
   version:

@@ -1,0 +1,29 @@
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Documents</h1>
+    <div>
+      <h2>Latest</h2>
+      <ul>
+        {{#latest}}
+          <li>
+            <h3>{{ name }}</h3>
+            <p><a href="{{ webViewLink }}">Link</a></p>
+          </li>
+        {{/latest}}
+      </ul>
+      <h2>Selected</h2>
+      <ul>
+        {{#randomized}}
+          <li>
+            <h3>{{ name }}</h3>
+            <p><a href="{{ webViewLink }}">Link</a></p>
+          </li>
+        {{/randomized}}
+      </ul>
+    </div>
+    <p style="color:#CCC">Generated {{ date }}</p>
+  </body>
+</html>

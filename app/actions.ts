@@ -1,6 +1,10 @@
 import Mustache from 'mustache';
 import { google } from 'googleapis';
 import { SES } from 'aws-sdk';
+import fs from 'fs';
+
+const MOST_RECENT_COUNT = 3;
+const RANDOMIZED_COUNT = 3;
 
 const ses = new SES({ region: 'us-east-1' });
 
@@ -25,49 +29,59 @@ export async function fetchDocuments(auth) {
       throw new Error(err);
     });
 
-    // console.log(gResponse);
-
     pageToken = gResponse.nextPageToken;
-    // console.log('new token: ' + pageToken);
     documentsList = documentsList.concat(gResponse.files);
   } while (pageToken != null);
 
   console.log(`Pulled documents: ${documentsList.length}`);
+  const partitions = partitionList(documentsList);
 
-  await sendNewsletter(partitionList(documentsList)).then(res => {
-    console.log('sent!');
-    console.log(res);
+  await sendNewsletter(partitions).then(res => {
+    console.log('Email sent!');
   }).catch(err => {
     console.log(err);
   });
 }
 
-function partitionList(list) {
-  // gets the first five for now
-  return list.slice(0, 5);
+// fetches some most recent docs along with randomized historical ones
+function partitionList(list: any[]) {
+
+  const size = list.length;
+
+  const head = list.slice(0, MOST_RECENT_COUNT);
+  const tail = list.slice(MOST_RECENT_COUNT, size);
+  const indices = new Set();
+  const generated = [];
+
+  // generate `RANDOMIZED_COUNT` (x) of randomized indices of tail
+  for(let count = 0; count < RANDOMIZED_COUNT; count++) {
+    let index = Math.floor(Math.random() * Math.floor(tail.length));
+    if(indices.has(index)) {
+      count--;
+    }else{
+      indices.add(index);
+    }
+  }
+
+  indices.forEach((i: number) => {
+    generated.push(tail[i])
+  });
+
+  // combines most recent with randomly generated
+  // return head.concat(generated);
+  return {
+    latest: head,
+    randomized: generated
+  }
 }
 
-function sendNewsletter(curatedList: any[]) {
-  console.log(curatedList);
-
-  const template = `
-    <h1>Documents</h1>
-    <div>
-      <ul>
-        {{#docs}}
-          <li>
-            <h3>{{ name }}</h3>
-            <p><a href="{{ webViewLink }}">Link</a></p>
-          </li>
-        {{/docs}}
-      </ul>
-    </div>
-    <p style="color:#CCC">{{ date }}</p>
-  `;
+function sendNewsletter({ latest, randomized }) {
+  const template = fs.readFileSync('app/resources/template.html').toString();
 
   const view = {
-    docs: curatedList,
-    date: 'The date'
+    latest,
+    randomized,
+    date: new Date().toLocaleDateString(),
   };
 
   const html = Mustache.render(template, view);
