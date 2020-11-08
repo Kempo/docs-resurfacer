@@ -11,7 +11,7 @@
               <tbody>
                 <tr>
                   <td width="840" align="center">
-                    <div style="max-width:600px;width:100%;margin:0 auto" dir="ltr" bgcolor="#ffffff">
+                    <div style="max-width:700px;width:100%;margin:0 auto" dir="ltr" bgcolor="#ffffff">
                       <table border="0" cellspacing="0" cellpadding="0" align="center" id="m_5267358241486950664email_table" style="border-collapse:collapse;max-width:420px;margin:0 auto">
                         <tbody>
                           <tr><td height="20" style="line-height:20px" colspan="3">&nbsp;</td></tr>
@@ -28,8 +28,8 @@
                               <ul>
                                 {{#latest}}
                                   <li>
-                                    <h3>{{ name }}</h3>
-                                    <p><a href="{{ webViewLink }}">Link</a></p>
+                                    <h3><a href="{{ webViewLink }}">{{ name }}</a></h3>
+                                    <p>{{ previewText }}...</p>
                                   </li>
                                 {{/latest}}
                               </ul>
@@ -42,8 +42,8 @@
                               <ul>
                                 {{#randomized}}
                                   <li>
-                                    <h3>{{ name }}</h3>
-                                    <p><a href="{{ webViewLink }}">Link</a></p>
+                                    <h3><a href="{{ webViewLink }}">{{ name }}</a></h3>
+                                    <p>{{ previewText }}</p>
                                   </li>
                                 {{/randomized}}
                               </ul>

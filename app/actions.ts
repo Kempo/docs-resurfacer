@@ -1,10 +1,11 @@
 import Mustache from 'mustache';
-import { google } from 'googleapis';
+import { drive_v3, google } from 'googleapis';
 import { SES } from 'aws-sdk';
 import fs from 'fs';
 
 const MOST_RECENT_COUNT = 3;
 const RANDOMIZED_COUNT = 3;
+const PREVIEW_LENGTH = 125;
 
 const ses = new SES({ region: 'us-east-1' });
 
@@ -44,13 +45,29 @@ async function fetchDocuments(auth) {
   } while (pageToken != null);
 
   console.log(`Pulled documents: ${documentsList.length}`);
-  const documentPartitions = partitionList(documentsList);
+  const partition = await partitionList(documentsList, drive);
+  console.log(partition.latest);
+  return partition;
+}
 
-  return documentPartitions;
+async function updateDocsWithPreview(list: any[], drive: drive_v3.Drive) {
+  return await Promise.all(list.map(async document => {
+    const gResponse = await drive.files.export({
+      fileId: document.id,
+      mimeType: 'text/plain',
+    });
+
+    const fullText = <unknown>gResponse.data as string;
+
+    return {
+      ...document,
+      previewText: fullText.substring(0, PREVIEW_LENGTH)
+    }
+  })); 
 }
 
 // fetches some most recent docs along with randomized historical ones
-function partitionList(list: any[]) {
+async function partitionList(list: any[], drive) {
 
   const size = list.length;
 
@@ -74,8 +91,8 @@ function partitionList(list: any[]) {
   });
 
   return {
-    latest: head,
-    randomized: generated
+    latest: await updateDocsWithPreview(head, drive),
+    randomized: await updateDocsWithPreview(generated, drive)
   }
 }
 
@@ -91,8 +108,6 @@ function fetchTemplate({ latest, randomized }) {
   };
 
   const html = Mustache.render(template, view);
-
-  console.log(html);
 
   return html;
 }
