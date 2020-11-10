@@ -1,8 +1,6 @@
 # Resurface old memories into your email.
 
-A file resurfacer, starting with Google Docs first.
-
-Don't forget your past.
+A file resurfacer. Receive emails on notes you've written, quotes you've kept, and memories you've made.
 
 ## Stack
   - Node.js Typescript Serverless lambda
