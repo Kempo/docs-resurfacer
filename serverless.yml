@@ -79,9 +79,9 @@ plugins:
 #    - exclude-me.js
 #    - exclude-me-dir/**
 
-#package:
-#  include:
-#    - app/resources/**
+package:
+  exclude:
+    - tests/**
 
 functions:
   version:

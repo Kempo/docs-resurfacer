@@ -3,6 +3,8 @@ import { drive_v3, google } from 'googleapis';
 import { SES } from 'aws-sdk';
 import fs from 'fs';
 
+import DOC_ID_FILTER from './resources/blacklist';
+
 const MOST_RECENT_COUNT = 3;
 const RANDOMIZED_COUNT = 3;
 const PREVIEW_LENGTH = 125;
@@ -40,11 +42,15 @@ async function fetchDocuments(auth) {
       throw new Error(err);
     });
 
+    const rawDocuments = gResponse.files;
+    const output = rawDocuments.filter(doc => !DOC_ID_FILTER.includes(doc.id));
+
     pageToken = gResponse.nextPageToken;
-    documentsList = documentsList.concat(gResponse.files);
+    documentsList = documentsList.concat(output);
   } while (pageToken != null);
 
   console.log(`Pulled documents: ${documentsList.length}`);
+
   const partition = await partitionList(documentsList, drive);
   console.log(partition.latest);
   return partition;
@@ -97,8 +103,8 @@ async function partitionList(list: any[], drive) {
 }
 
 function fetchTemplate({ latest, randomized }) {
-  const template = fs.readFileSync('app/resources/template.html').toString();
-  const styles = fs.readFileSync('app/resources/style.css').toString();
+  const template = fs.readFileSync('app/resources/email/template.html').toString();
+  const styles = fs.readFileSync('app/resources/email/style.css').toString();
 
   const view = {
     styles: `<style>${styles}</style>`,
@@ -122,7 +128,7 @@ function sendNewsletter(html: string) {
             Html: { Data: html },
             Text: { Data: "Documents List" }
         },
-        Subject: { Data: "Documents by Aaron Chen" }
+        Subject: { Data: "Habitual notes to yourself - remember." }
     },
     Source: "ilestkempo@gmail.com"
   };
