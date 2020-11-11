@@ -3,7 +3,7 @@ import { drive_v3, google } from 'googleapis';
 import { SES } from 'aws-sdk';
 import fs from 'fs';
 
-import DOC_ID_FILTER from './resources/blacklist';
+import { blacklist as DOC_ID_FILTER, favorites as FAVORITES } from './resources/lists';
 
 const MOST_RECENT_COUNT = 3;
 const RANDOMIZED_COUNT = 3;
@@ -52,7 +52,6 @@ async function fetchDocuments(auth) {
   console.log(`Pulled documents: ${documentsList.length}`);
 
   const partition = await partitionList(documentsList, drive);
-  console.log(partition.latest);
   return partition;
 }
 
@@ -73,12 +72,17 @@ async function updateDocsWithPreview(list: any[], drive: drive_v3.Drive) {
 }
 
 // fetches some most recent docs along with randomized historical ones
-async function partitionList(list: any[], drive) {
+async function partitionList(fullList: any[], drive) {
 
-  const size = list.length;
+  // avoid using `splice` and mutating the original list
+  const starred = fullList.filter(doc => FAVORITES.includes(doc.id));
 
-  const head = list.slice(0, MOST_RECENT_COUNT);
-  const tail = list.slice(MOST_RECENT_COUNT, size);
+  const allUnstarred = fullList.filter(doc => !FAVORITES.includes(doc.id));
+
+  const size = allUnstarred.length;
+
+  const head = allUnstarred.slice(0, MOST_RECENT_COUNT);
+  const tail = allUnstarred.slice(MOST_RECENT_COUNT, size);
   const indices = new Set();
   const generated = [];
 
@@ -97,12 +101,13 @@ async function partitionList(list: any[], drive) {
   });
 
   return {
+    starred: await updateDocsWithPreview(starred, drive),
     latest: await updateDocsWithPreview(head, drive),
     randomized: await updateDocsWithPreview(generated, drive)
   }
 }
 
-function fetchTemplate({ latest, randomized }) {
+function fetchTemplate({ latest, randomized, starred }) {
   const template = fs.readFileSync('app/resources/email/template.html').toString();
   const styles = fs.readFileSync('app/resources/email/style.css').toString();
 
@@ -110,6 +115,7 @@ function fetchTemplate({ latest, randomized }) {
     styles: `<style>${styles}</style>`,
     latest,
     randomized,
+    starred,
     date: new Date().toLocaleDateString(),
   };
 
@@ -128,7 +134,7 @@ function sendNewsletter(html: string) {
             Html: { Data: html },
             Text: { Data: "Documents List" }
         },
-        Subject: { Data: "Habitual notes to yourself - remember." }
+        Subject: { Data: "Habitual notes to self - Aaron Chen" }
     },
     Source: "ilestkempo@gmail.com"
   };

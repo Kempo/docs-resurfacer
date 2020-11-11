@@ -18,7 +18,18 @@
                           <tr>
                             <td>
                               <h1>Documents</h1>
-                              <p style="color:#CCC">Generated: <strong>{{ date }}</strong></p>
+                              <p style="color:#CCC">
+                                Habitual thoughts to yourself.
+                                <br />
+                                Generated: <strong>{{ date }}</strong>
+                              </p>
+                              <ul style="padding-left:0px">
+                                {{#starred}}
+                                  <li style="float: left; padding-right: 8px; margin-left:0px">
+                                    <a href="{{ webViewLink }}">{{ name }}</a>
+                                  </li>
+                                {{/starred}}
+                              </ul>
                             </td>
                           </tr>
                           <tr>
