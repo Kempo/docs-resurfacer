@@ -100,8 +100,11 @@ functions:
     handler: app/handler.scheduled
     events:
       - schedule:
-          rate: rate(1 minute)
+          rate: rate(1 day)
           enabled: true
+
+          # every sunday at 5pm UTC -> 9am PST
+          # rate(4 days)
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events

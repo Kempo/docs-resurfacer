@@ -41,9 +41,7 @@ async function authorize(credentials, callback) {
     callback(oAuth2Client);
   }).catch(err => {
     // if the file has deprecated credentials or if it doesn't exist
-
     console.log('Getting new token...');
-    console.log(err);
     const res = getNewToken(oAuth2Client);
     console.log(res);
   });
@@ -72,7 +70,7 @@ export async function processToken(code) {
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
-  return oAuth2Client.getToken(code, async (err, token) => {
+  oAuth2Client.getToken(code, async (err, token) => {
     if (err) { return err };
     oAuth2Client.setCredentials(token);
 
@@ -87,4 +85,6 @@ export async function processToken(code) {
       console.log(err);
     })
   });
+
+  return 'Processed token.!'
 }
