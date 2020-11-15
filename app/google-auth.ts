@@ -40,8 +40,8 @@ async function authorize(credentials, callback) {
     oAuth2Client.setCredentials(pulledCredentials);
     callback(oAuth2Client);
   }).catch(err => {
-    // if the file has deprecated credentials or if it doesn't exist
-    console.log('Getting new token...');
+    console.log(err);
+    console.log('\nGetting new token...');
     const res = getNewToken(oAuth2Client);
     console.log(res);
   });
@@ -69,9 +69,14 @@ export async function processToken(code) {
   const {client_secret, client_id, redirect_uris} = credentials.web;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
+  console.log('at process token');
 
   oAuth2Client.getToken(code, async (err, token) => {
-    if (err) { return err };
+    if (err) { 
+      console.log(err);
+      return err 
+    };
+
     oAuth2Client.setCredentials(token);
 
     return await bucket.upload({
@@ -79,12 +84,12 @@ export async function processToken(code) {
       Key: 'aaron-chen.json',
       Body: JSON.stringify(token)
     }).promise().then(res => {
-      console.log('we got dat done.');
+      console.log('Uploaded!');
       return 'Successfully uploaded.'
     }).catch(err => {
       console.log(err);
     })
   });
 
-  return 'Processed token.!'
+  return 'Processed token!'
 }
