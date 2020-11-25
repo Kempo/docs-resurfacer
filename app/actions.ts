@@ -111,15 +111,6 @@ async function updateDocsWithPreview(list: any[], drive: drive_v3.Drive) {
 }
 
 function fetchTemplate({ latest, randomized, starred }) {
-
-  /*
-  const pathName = (file) => process.env.LAMBDA_TASK_ROOT
-    ? path.resolve(process.env.LAMBDA_TASK_ROOT, file)
-    : path.resolve(__dirname, file);
-
-  const t = pathName('template.html');
-  */
-
   const template = fs.readFileSync(`${__dirname}/resources/email/template.html`).toString();
   const styles = fs.readFileSync(`${__dirname}/resources/email/style.css`).toString();
 

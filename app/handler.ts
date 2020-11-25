@@ -36,9 +36,6 @@ export async function process(event) {
 }
 
 export async function scheduled(event, context) {
-  // send out both docs and also a reauthorization link
-  // call `authorize`
-  console.log('Scheduled function!');
   console.log(`Request Id: ${context.awsRequestId}`);
 
   await getAuthorization().then(startScheduledEmail);
