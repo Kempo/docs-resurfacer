@@ -1,10 +1,11 @@
-import { onLoad, processToken } from './google-auth';
+import { getAuthorization, processToken, getNewToken } from './google-auth';
 import { startScheduledEmail } from './actions';
 
-// Returns authorization url.
+// Returns a manual authorization url.
+// TODO: seems to not be entirely necessary, so may remove.
 export async function authorize(event) {
 
-  const res = await onLoad(() => { console.log('Authorization url posted.') });
+  const res = getNewToken();
 
   return {
     statusCode: 200,
@@ -34,9 +35,11 @@ export async function process(event) {
   };
 }
 
-export async function scheduled(event) {
+export async function scheduled(event, context) {
   // send out both docs and also a reauthorization link
   // call `authorize`
+  console.log('Scheduled function!');
+  console.log(`Request Id: ${context.awsRequestId}`);
 
-  await onLoad(startScheduledEmail);
+  await getAuthorization().then(startScheduledEmail);
 }

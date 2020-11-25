@@ -12,17 +12,21 @@ const PREVIEW_LENGTH = 125;
 const ses = new SES({ region: 'us-east-1' });
 
 export async function startScheduledEmail(auth) {
+  console.log('Starting scheduled email.');
+
   return await fetchDocuments(auth)
                 .then(fetchTemplate)
                 .then(sendNewsletter)
                 .then((res) => {
                   console.log(`Email sent at ${Date.now()}`);
                   return res;
-                })
+                });
 }
 
 async function fetchDocuments(auth) {  
   const drive = google.drive({ version: 'v3', auth });
+
+  console.log('Fetching documents...');
 
   // TODO: document caching -> cron cache clearer (1 week) + check cache -> then fetch
   // or key-based cache expiration ? See Lutke or DHH blog post
@@ -41,7 +45,6 @@ async function fetchDocuments(auth) {
       console.log(err);
       throw new Error(err);
     });
-
     const rawDocuments = gResponse.files;
     const output = rawDocuments.filter(doc => !DOC_ID_FILTER.includes(doc.id));
 
@@ -53,22 +56,6 @@ async function fetchDocuments(auth) {
 
   const partition = await partitionList(documentsList, drive);
   return partition;
-}
-
-async function updateDocsWithPreview(list: any[], drive: drive_v3.Drive) {
-  return await Promise.all(list.map(async document => {
-    const gResponse = await drive.files.export({
-      fileId: document.id,
-      mimeType: 'text/plain',
-    });
-
-    const fullText = <unknown>gResponse.data as string;
-
-    return {
-      ...document,
-      previewText: fullText.substring(0, PREVIEW_LENGTH)
-    }
-  })); 
 }
 
 // fetches some most recent docs along with randomized historical ones
@@ -107,9 +94,34 @@ async function partitionList(fullList: any[], drive) {
   }
 }
 
+async function updateDocsWithPreview(list: any[], drive: drive_v3.Drive) {
+  return await Promise.all(list.map(async document => {
+    const gResponse = await drive.files.export({
+      fileId: document.id,
+      mimeType: 'text/plain',
+    });
+
+    const fullText = <unknown>gResponse.data as string;
+
+    return {
+      ...document,
+      previewText: fullText.substring(0, PREVIEW_LENGTH)
+    }
+  })); 
+}
+
 function fetchTemplate({ latest, randomized, starred }) {
-  const template = fs.readFileSync('app/resources/email/template.html').toString();
-  const styles = fs.readFileSync('app/resources/email/style.css').toString();
+
+  /*
+  const pathName = (file) => process.env.LAMBDA_TASK_ROOT
+    ? path.resolve(process.env.LAMBDA_TASK_ROOT, file)
+    : path.resolve(__dirname, file);
+
+  const t = pathName('template.html');
+  */
+
+  const template = fs.readFileSync(`${__dirname}/resources/email/template.html`).toString();
+  const styles = fs.readFileSync(`${__dirname}/resources/email/style.css`).toString();
 
   const view = {
     styles: `<style>${styles}</style>`,
@@ -124,7 +136,9 @@ function fetchTemplate({ latest, randomized, starred }) {
   return html;
 }
 
-function sendNewsletter(html: string) {
+async function sendNewsletter(html: string) {
+  console.log('Sending newsletter now...');
+
   const params = {
     Destination: {
         ToAddresses: ["ilestkempo@gmail.com"]
@@ -134,7 +148,7 @@ function sendNewsletter(html: string) {
             Html: { Data: html },
             Text: { Data: "Documents List" }
         },
-        Subject: { Data: "Habitual notes to self - Aaron Chen" }
+        Subject: { Data: "Notes to self / Aaron Chen" }
     },
     Source: "ilestkempo@gmail.com"
   };

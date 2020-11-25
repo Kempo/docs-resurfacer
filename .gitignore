@@ -8,5 +8,6 @@ jspm_packages
 
 # API credentials
 credentials.json
+aws.json
 
 .DS_Store

@@ -8,10 +8,13 @@ const SCOPES = ['https://www.googleapis.com/auth/documents.readonly',
                 'https://www.googleapis.com/auth/userinfo.email',
                 'https://www.googleapis.com/auth/drive.readonly'];
 
-export async function onLoad(callback) {
-  // Load client secrets from a local file.
-  // Authorize a client with credentials, then call the Google Docs API.
-  return authorize(credentials, callback);
+// Load client secrets from a local file.
+const { client_secret, client_id, redirect_uris } = credentials.web;
+const oAuth2Client = new google.auth.OAuth2(
+    client_id, client_secret, redirect_uris[0]);
+
+export async function getAuthorization() {
+  return authorize();
 }
 
 /**
@@ -20,41 +23,35 @@ export async function onLoad(callback) {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-async function authorize(credentials, callback) {
-  const {client_secret, client_id, redirect_uris} = credentials.web;
-  const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
-
+async function authorize() {
   // Check if there is already existing refresh/access tokens
   // Check from S3
-  await bucket.getObject({
+  return await bucket.getObject({
     Bucket: 'docs-resurfacer-access-tokens',
     Key: 'aaron-chen.json'
   }).promise().then((data) => {
     console.log('Tokens successfully retrieved.');
     const pulledCredentials = JSON.parse(data.Body.toString());
-    console.log(pulledCredentials);
 
     // convert file to readable
     // set OAuth with file
     oAuth2Client.setCredentials(pulledCredentials);
-    callback(oAuth2Client);
-  }).catch(err => {
-    console.log(err);
-    console.log('\nGetting new token...');
-    const res = getNewToken(oAuth2Client);
-    console.log(res);
-  });
+    console.log('Returning oAuth client...')
 
-  return 'Finished.';
+    return oAuth2Client;
+  }).catch(err => {
+    console.log('Getting new token...');
+    const res = getNewToken();
+
+    throw new Error(`Error: ${res}`);
+  });
 }
 
 /**
  * Get and store new token after prompting for user authorization, and then
  * execute the given callback with the authorized OAuth2 client.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  */
-function getNewToken(oAuth2Client) {
+export function getNewToken() {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
@@ -69,7 +66,6 @@ export async function processToken(code) {
   const {client_secret, client_id, redirect_uris} = credentials.web;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
-  console.log('at process token');
 
   oAuth2Client.getToken(code, async (err, token) => {
     if (err) { 

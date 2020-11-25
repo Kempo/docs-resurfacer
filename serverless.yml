@@ -28,12 +28,17 @@ provider:
       Action:
         - s3:PutObject
         - s3:PutObjectAcl
+        - s3:GetObject
+        - s3:GetObjectAcl
       Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+      Resource: "arn:aws:ses:us-east-1:${self:custom.userId}:identity/${self:custom.email}"
   apiGateway:
     shouldStartNameWithService: true
 
-custom:
-  bucket: docs-resurfacer-access-tokens
+custom: ${file(./aws.json)}
 
 resources:
   Resources:
@@ -80,6 +85,8 @@ plugins:
 #    - exclude-me-dir/**
 
 package:
+  include:
+    - app/resources/email/**
   exclude:
     - tests/**
 
@@ -100,7 +107,7 @@ functions:
     handler: app/handler.scheduled
     events:
       - schedule:
-          rate: rate(30 minutes)
+          rate: rate(1 day)
           enabled: true
 
           # every sunday at 5pm UTC -> 9am PST
