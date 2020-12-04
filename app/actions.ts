@@ -1,8 +1,9 @@
 import Mustache from 'mustache';
-import { drive_v3, google } from 'googleapis';
-import { SES } from 'aws-sdk';
 import fs from 'fs';
+import { google } from 'googleapis';
+import { SES } from 'aws-sdk';
 
+import { Document, GoogleDrive } from './resources/types';
 import { blacklist as DOC_ID_FILTER, favorites as FAVORITES } from './resources/lists';
 
 const MOST_RECENT_COUNT = 3;
@@ -15,6 +16,7 @@ export async function startScheduledEmail(auth) {
   console.log('Starting scheduled email.');
 
   return await fetchDocuments(auth)
+                .then(fetchSplitCategories)
                 .then(fetchTemplate)
                 .then(sendNewsletter)
                 .then((res) => {
@@ -45,6 +47,7 @@ async function fetchDocuments(auth) {
       console.log(err);
       throw new Error(err);
     });
+
     const rawDocuments = gResponse.files;
     const output = rawDocuments.filter(doc => !DOC_ID_FILTER.includes(doc.id));
 
@@ -54,12 +57,14 @@ async function fetchDocuments(auth) {
 
   console.log(`Pulled documents: ${documentsList.length}`);
 
-  const partition = await partitionList(documentsList, drive);
-  return partition;
+  return {
+    fullList: documentsList,
+    drive
+  };
 }
 
 // fetches some most recent docs along with randomized historical ones
-async function partitionList(fullList: any[], drive) {
+async function fetchSplitCategories({ fullList, drive } : { fullList: Document[], drive: GoogleDrive }) {
 
   // avoid using `splice` and mutating the original list
   const starred = fullList.filter(doc => FAVORITES.includes(doc.id));
@@ -70,6 +75,7 @@ async function partitionList(fullList: any[], drive) {
 
   const head = allUnstarred.slice(0, MOST_RECENT_COUNT);
   const tail = allUnstarred.slice(MOST_RECENT_COUNT, size);
+
   const indices = new Set();
   const generated = [];
 
@@ -94,7 +100,7 @@ async function partitionList(fullList: any[], drive) {
   }
 }
 
-async function updateDocsWithPreview(list: any[], drive: drive_v3.Drive) {
+async function updateDocsWithPreview(list: Document[], drive: GoogleDrive) {
   return await Promise.all(list.map(async document => {
     const gResponse = await drive.files.export({
       fileId: document.id,
