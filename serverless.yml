@@ -37,6 +37,10 @@ provider:
       Resource: "arn:aws:ses:us-east-1:${self:custom.userId}:identity/${self:custom.email}"
   apiGateway:
     shouldStartNameWithService: true
+  environment:
+    email: "${self:custom.email}"
+    bucket: "${self:custom.bucket}"
+    file_name: "${self:custom.file_name}"
 
 custom: ${file(./aws.json)}
 
@@ -107,7 +111,7 @@ functions:
     handler: app/handler.scheduled
     events:
       - schedule:
-          rate: rate(1 day)
+          rate: rate(1 minute)
           enabled: true
 
           # every sunday at 5pm UTC -> 9am PST

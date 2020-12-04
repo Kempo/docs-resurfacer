@@ -39,11 +39,10 @@ async function authorize() {
     console.log('Returning oAuth client...')
 
     return oAuth2Client;
-  }).catch(err => {
-    console.log('Getting new token...');
+  }).catch(() => {
     const res = getNewToken();
 
-    throw new Error(`Error: ${res}`);
+    throw new Error(`Please authorize here: ${res}`);
   });
 }
 
@@ -57,35 +56,24 @@ export function getNewToken() {
     scope: SCOPES,
   });
 
-  // return authUrl to client
-  // client sends back request with code
-  return `Please visit ${authUrl}`;
+  return authUrl;
 }
 
-export async function processToken(code) {
-  const {client_secret, client_id, redirect_uris} = credentials.web;
-  const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
+export function processToken(code) {
+  return oAuth2Client.getToken(code).then(async ({ tokens }) => {
 
-  oAuth2Client.getToken(code, async (err, token) => {
-    if (err) { 
-      console.log(err);
-      return err 
-    };
+    // TODO: use oAuth2Client to send email -> confirmation
+    // oAuth2Client.setCredentials(tokens);
 
-    oAuth2Client.setCredentials(token);
+    const bucketName = process.env.bucket;
+    const fileName = process.env.file_name;
 
-    return await bucket.upload({
-      Bucket: 'docs-resurfacer-access-tokens',
-      Key: 'aaron-chen.json',
-      Body: JSON.stringify(token)
-    }).promise().then(res => {
-      console.log('Uploaded!');
-      return 'Successfully uploaded.'
-    }).catch(err => {
-      console.log(err);
-    })
+    const params: S3.PutObjectRequest = {
+      Bucket: bucketName,
+      Key: fileName,
+      Body: JSON.stringify(tokens)
+    }
+
+    return bucket.upload(params).promise();
   });
-
-  return 'Processed token!'
 }

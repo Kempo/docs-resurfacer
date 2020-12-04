@@ -132,16 +132,16 @@ async function sendNewsletter(html: string) {
 
   const params = {
     Destination: {
-        ToAddresses: ["ilestkempo@gmail.com"]
+        ToAddresses: [`${process.env.email}`]
     },
     Message: {
         Body: {
             Html: { Data: html },
             Text: { Data: "Documents List" }
         },
-        Subject: { Data: "Notes to self / Aaron Chen" }
+        Subject: { Data: "Notes to self" }
     },
-    Source: "ilestkempo@gmail.com"
+    Source: `${process.env.email}`
   };
 
   return ses.sendEmail(params).promise();

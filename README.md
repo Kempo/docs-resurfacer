@@ -3,6 +3,8 @@
 A file resurfacer. Receive emails on notes you've written, quotes you've kept, and memories you've made.
 
 ## Rundown
+---**to be finished**---
+
 1. Deploy with your own credentials (eg. AWS, Google) and details (eg. email)
 2. Manually authorize through the `authorize` function (*for now*) by going to the link that will be provided in console logs.
 3. By authorizing, you'll sign in to Google to provide permissions and that'll hit the backend endpoint `process` that will update the S3 with your new creds.
@@ -11,6 +13,7 @@ A file resurfacer. Receive emails on notes you've written, quotes you've kept, a
 ## How to Deploy & Run
 1. You're gonna need a `credentials.json` and an `aws.json` file in the root directory.
 - The `credentials.json` file will have the Google OAuth credentials which you download from them.
+- Additionally make sure you have the proper `redirect_uris` set in `credentials.json`. This would probably mean `localhost:3000/dev/process` for development and `http://insert-lambda-url/dev/process` for a deployed app.
 - The `aws.json` file will contain:
 ```
 {
@@ -34,5 +37,5 @@ A file resurfacer. Receive emails on notes you've written, quotes you've kept, a
 - [ ] Integrate environment variables
 - [ ] Tighten AWS policies
 - [ ] Simplify document preview fetching
-- [ ] Remove unnecessary `authorize` function
+- [x] Update `authorize` function
 - [ ] Email authorization link
