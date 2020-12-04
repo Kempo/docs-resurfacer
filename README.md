@@ -2,13 +2,9 @@
 
 A file resurfacer. Receive emails on notes you've written, quotes you've kept, and memories you've made.
 
-## Rundown
----**to be finished**---
-
-1. Deploy with your own credentials (eg. AWS, Google) and details (eg. email)
-2. Manually authorize through the `authorize` function (*for now*) by going to the link that will be provided in console logs.
-3. By authorizing, you'll sign in to Google to provide permissions and that'll hit the backend endpoint `process` that will update the S3 with your new creds.
-4. When those credentials are successfully uploaded. Scheduling should work out of the box (default: `1 day`), and you should begin to receive emails! 
+## Prerequisites
+1. Setup AWS credentials on computer
+2. Install Serverless
 
 ## How to Deploy & Run
 1. You're gonna need a `credentials.json` and an `aws.json` file in the root directory.
@@ -23,6 +19,9 @@ A file resurfacer. Receive emails on notes you've written, quotes you've kept, a
   "file_name": "google-stuff.json" // the file within your S3 to fetch
 }
 ```
+2. Once you have the static files set up in root, you're going to need to authorize for the first time. Run the app in development with `sls offline` and go to the `/authorize` endpoint and authorize your Google account through the link provided.
+3. Once you've provided permissions, the app will hit the `/process` endpoint with your credentials and save them to the S3 bucket you provided in `aws.json`. 
+4. If everything goes well, you can deploy with `sls deploy` and scheduling would work out of the box (default: `1 day`) and you should begin to receive emails!
 
 ---**to be finished**---
 
@@ -34,7 +33,7 @@ A file resurfacer. Receive emails on notes you've written, quotes you've kept, a
 
 ## Action Items 
 - [x] Remove callbacks
-- [ ] Integrate environment variables
+- [x] Integrate environment variables
 - [ ] Tighten AWS policies
 - [ ] Simplify document preview fetching
 - [x] Update `authorize` function
