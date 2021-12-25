@@ -7,7 +7,7 @@ import { Document, GoogleDrive } from './resources/types';
 import { blacklist as DOC_ID_FILTER, favorites as FAVORITES } from './resources/lists';
 
 const MOST_RECENT_COUNT = 3;
-const RANDOMIZED_COUNT = 3;
+const RANDOMIZED_COUNT = 8;
 const PREVIEW_LENGTH = 125;
 
 const ses = new SES({ region: 'us-east-1' });

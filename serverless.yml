@@ -111,7 +111,7 @@ functions:
     handler: app/handler.scheduled
     events:
       - schedule:
-          rate: rate(3 days)
+          rate: rate(7 days)
           enabled: true
 
           # every sunday at 5pm UTC -> 9am PST
